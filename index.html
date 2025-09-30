@@ -47,7 +47,6 @@
             transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            display: inline-block;
         }
 
         .install-btn:hover {
@@ -217,8 +216,8 @@
 <body>
     <div class="container">
         <div class="top-bar">
-            <button class="install-btn" id="installButton" onclick="installApp()">
-                Install App
+            <button class="install-btn" id="installButton">
+                📱 Install App
             </button>
         </div>
 
@@ -319,45 +318,43 @@
         const installButton = document.getElementById('installButton');
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the mini-infobar from appearing
             e.preventDefault();
-            // Save the event
             deferredPrompt = e;
         });
 
-        function installApp() {
+        installButton.addEventListener('click', () => {
             if (!deferredPrompt) {
-                alert('Install is not available. Make sure you are using Chrome or Edge browser and the site is served over HTTPS.');
+                alert('Install is not available right now. Make sure you are using Chrome or Edge browser and the site is served over HTTPS with all PWA files (manifest.json, sw.js, icons).');
                 return;
             }
 
-            // Hide the install button
             installButton.style.display = 'none';
-
-            // Show the install prompt
             deferredPrompt.prompt();
 
-            // Wait for the user to respond to the prompt
             deferredPrompt.userChoice.then((choiceResult) => {
                 if (choiceResult.outcome === 'accepted') {
-                    console.log('User accepted the install prompt');
+                    console.log('App installed successfully');
                 } else {
-                    console.log('User dismissed the install prompt');
-                    // Show button again if user cancels
-                    installButton.style.display = 'inline-block';
+                    installButton.style.display = 'block';
                 }
                 deferredPrompt = null;
             });
-        }
-
-        // Hide button if already installed
-        window.addEventListener('appinstalled', () => {
-            installButton.style.display = 'none';
-            console.log('App installed successfully');
         });
 
-        // Service Worker registration removed - not needed for basic functionality
-        // To enable PWA features, you'll need to create a sw.js file and manifest.json
+        window.addEventListener('appinstalled', () => {
+            installButton.style.display = 'none';
+        });
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registered successfully'))
+                    .catch(err => {
+                        console.log('Service Worker not available yet - make sure sw.js is in the same folder when deployed');
+                    });
+            });
+        }
     </script>
 </body>
 </html>
