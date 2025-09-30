@@ -2,9 +2,7 @@ const CACHE_NAME = 'resource-dashboard-v1';
 const urlsToCache = [
   './',
   './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './manifest.json'
 ];
 
 // Install event - cache files
@@ -13,7 +11,9 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Opened cache');
-        return cache.addAll(urlsToCache);
+        return cache.addAll(urlsToCache).catch(err => {
+          console.log('Cache addAll failed:', err);
+        });
       })
   );
 });
@@ -26,6 +26,9 @@ self.addEventListener('fetch', (event) => {
         if (response) {
           return response;
         }
+        return fetch(event.request);
+      })
+      .catch(() => {
         return fetch(event.request);
       })
   );
