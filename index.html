@@ -47,17 +47,13 @@
             transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            display: none;
+            display: inline-block;
         }
 
         .install-btn:hover {
             background: #388bfd;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(88, 166, 255, 0.4);
-        }
-
-        .install-btn.show {
-            display: inline-block;
         }
 
         .header {
@@ -327,8 +323,6 @@
             e.preventDefault();
             // Save the event
             deferredPrompt = e;
-            // Show the install button
-            installButton.classList.add('show');
         });
 
         function installApp() {
@@ -362,14 +356,8 @@
             console.log('App installed successfully');
         });
 
-        // Register Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker registered'))
-                    .catch(err => console.log('Service Worker failed:', err));
-            });
-        }
+        // Service Worker registration removed - not needed for basic functionality
+        // To enable PWA features, you'll need to create a sw.js file and manifest.json
     </script>
 </body>
 </html>
