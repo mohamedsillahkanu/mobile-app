@@ -1,5 +1,5 @@
 {
-  "name": "Resource Dashboard",
+  "name": "Resource Dashboard", 
   "short_name": "Dashboard",
   "description": "Quick access dashboard for all your important resources",
   "start_url": "/",
