@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0d1117">
-    <meta name="description" content="Resource Dashboard">
-    <link rel="manifest" href="manifest.json">
+    <meta name="description" content="Resource Dashboard - Quick access to all your important resources">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E📱%3C/text%3E%3C/svg%3E">
     <title>Resource Dashboard</title>
     <style>
         * {
@@ -52,6 +53,10 @@
             background: #388bfd;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(88, 166, 255, 0.4);
+        }
+
+        .install-btn.hidden {
+            display: none;
         }
 
         .header {
@@ -215,7 +220,7 @@
 <body>
     <div class="container">
         <div class="top-bar">
-            <button class="install-btn" id="installButton">
+            <button class="install-btn hidden" id="installButton">
                 📱 Install App
             </button>
         </div>
@@ -316,43 +321,74 @@
         let deferredPrompt;
         const installButton = document.getElementById('installButton');
 
+        // Check if already installed or in standalone mode
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+            console.log('App is already installed');
+            installButton.classList.add('hidden');
+        }
+
         window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('✅ beforeinstallprompt event fired - Install is available!');
             e.preventDefault();
             deferredPrompt = e;
+            installButton.classList.remove('hidden');
         });
 
-        installButton.addEventListener('click', () => {
+        installButton.addEventListener('click', async () => {
+            console.log('Install button clicked');
+            
             if (!deferredPrompt) {
-                alert('Install is not available right now. Make sure you are using Chrome or Edge browser and the site is served over HTTPS with all PWA files (manifest.json, sw.js, icons).');
+                console.log('❌ No install prompt available');
+                alert('Install is not available right now. This can happen if:\n\n• The app is already installed\n• You\'re not using Chrome or Edge browser\n• Service Worker hasn\'t fully registered yet\n\nTry:\n1. Refresh the page (Ctrl+Shift+R or Cmd+Shift+R)\n2. Wait 30 seconds\n3. Check the browser console for errors (F12)');
                 return;
             }
 
-            installButton.style.display = 'none';
+            console.log('Showing install prompt...');
             deferredPrompt.prompt();
 
-            deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                    console.log('App installed successfully');
-                } else {
-                    installButton.style.display = 'block';
-                }
-                deferredPrompt = null;
-            });
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response: ${outcome}`);
+            
+            if (outcome === 'accepted') {
+                console.log('✅ App installed successfully!');
+            } else {
+                console.log('❌ User dismissed the install prompt');
+            }
+            
+            deferredPrompt = null;
+            installButton.classList.add('hidden');
         });
 
         window.addEventListener('appinstalled', () => {
-            installButton.style.display = 'none';
+            console.log('✅ App was installed successfully');
+            installButton.classList.add('hidden');
+            deferredPrompt = null;
         });
 
         // Register Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker registered successfully'))
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registered:', registration.scope);
+                        
+                        // Check registration state
+                        if (registration.installing) {
+                            console.log('Service Worker installing...');
+                        } else if (registration.waiting) {
+                            console.log('Service Worker waiting...');
+                        } else if (registration.active) {
+                            console.log('Service Worker active!');
+                        }
+                    })
                     .catch(err => {
-                        console.log('Service Worker not available yet - make sure sw.js is in the same folder when deployed');
+                        console.error('❌ Service Worker registration failed:', err);
+                        installButton.classList.add('hidden');
                     });
             });
+        } else {
+            console.log('❌ Service Workers not supported in this browser');
+            installButton.classList.add('hidden');
         }
     </script>
 </body>
